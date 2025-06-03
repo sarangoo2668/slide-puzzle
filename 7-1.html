@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>3x3 スライドパズル</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: start;
+      min-height: 100vh;
+      background-color: #f8f8f8;
+      padding-top: 30px;
+      text-align: center;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .puzzle {
+      line-height: 0;
+      display: inline-block;
+      margin: 20px 0;
+    }
+
+    img {
+      width: 100px;
+      height: 100px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    #msg {
+      margin-top: 10px;
+      font-size: 18px;
+    }
+  </style>
+  <script type="text/javascript">
+    let ims;
+    let aki = 8;
+    let moveCount = 0;
+    let timer;
+    let startTime;
+    let a1 = [], a1_cnt = 0;
+    let a2 = new Audio("clear.mp3");
+    let selectSet = "kakigoori2";
+   
+    function selectImageSet(set) {
+    selectSet = set;
+        // 選択状態を見た目で反映
+    const images = document.querySelectorAll(".selector-img");
+    images.forEach(img => img.classList.remove("selected"));
+    
+    const selectedImg = [...images].find(img => img.src.includes(set + "0.jpg"));
+    if (selectedImg) selectedImg.classList.add("selected");
+  }
+
+    window.onload = function () {
+      ims = document.getElementsByName("im");
+      for (let i = 0; i < 4; i++) a1[i] = new Audio("slide.mp3");
+      startGame();
+    };
+
+    function updateTime() {
+      const now = new Date();
+      const elapsed = Math.floor((now - startTime) / 1000);
+      document.getElementById("time").textContent = `経過時間: ${elapsed}秒`;
+    }
+
+    function swap(p) {
+      ims[aki].src = ims[p].src;
+      ims[p].src = "black.png";
+      aki = p;
+    }
+
+    function isAdjacent(p1, p2) {
+      const dx = Math.abs(p1 % 3 - p2 % 3);
+      const dy = Math.abs(Math.floor(p1 / 3) - Math.floor(p2 / 3));
+      return dx + dy === 1;
+    }
+
+    function c(p) {
+      if (!isAdjacent(p, aki)) return;
+      a1[a1_cnt++].play();
+      a1_cnt &= 3;
+      swap(p);
+      moveCount++;
+      document.getElementById("moves").textContent = `移動回数: ${moveCount}回`;
+
+   
+    const correct = [
+     `${selectSet}0.jpg`, `${selectSet}1.jpg`, `${selectSet}2.jpg`,
+     `${selectSet}3.jpg`, `${selectSet}4.jpg`, `${selectSet}5.jpg`,
+      `${selectSet}6.jpg`, `${selectSet}7.jpg`, "black.png"
+    ];
+
+      let done = true;
+      for (let i = 0; i < 9; i++) {
+        if (!ims[i].src.endsWith(correct[i])) {
+          done = false;
+          break;
+        }
+      }
+
+      if (done) {
+        ims[8].src = `${selectSet}8.jpg`;
+        a2.play();
+        clearInterval(timer);
+      } 
+    }
+
+    function isSolvable(puzzle) {
+      let inv = 0;
+      for (let i = 0; i < 8; i++) {
+        for (let j = i + 1; j < 9; j++) {
+          if (puzzle[i] !== 8 && puzzle[j] !== 8 && puzzle[i] > puzzle[j]) inv++;
+        }
+      }
+      return inv % 2 === 0;
+    }
+
+    function shufflePuzzle() {
+      let nums;
+      do {
+        nums = [...Array(9).keys()];
+        for (let i = nums.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [nums[i], nums[j]] = [nums[j], nums[i]];
+        }
+      } while (!isSolvable(nums));
+      return nums;
+    }
+
+    function startGame() {
+      const order = shufflePuzzle();
+      moveCount = 0;
+      document.getElementById("moves").textContent = `移動回数: 0回`;
+
+      for (let i = 0; i < 9; i++) {
+        ims[i].src = (order[i] === 8) ? "black.png" : `${selectSet}${order[i]}.jpg`;
+        if (order[i] === 8) aki = i;
+      }
+
+      startTime = new Date();
+      clearInterval(timer);
+      timer = setInterval(updateTime, 1000);
+    }
+  </script>
+</head>
+<body>
+  <h1>スライドパズル</h1>
+  <ul>
+    <li>ピースをクリックして空白に動かそう</li>
+    <li>揃えたら完成！</li>
+    <h5>画像を選んでください：</h5>
+    <div id="imageSelector">
+        <img src="kakigoori2.jpg" onclick="selectImageSet('kakigoori2')" class="selector-img">
+        <img src="cat.jpg" onclick="selectImageSet('cat')" class="selector-img">
+        <img src="house.jpg" onclick="selectImageSet('house')" class="selector-img">
+    </div>
+
+    <li><button onclick="startGame()">ゲーム開始</button></li>
+  </ul>
+
+  <div class="puzzle">
+    <img name="im" onclick="c(0)" src="kakigoori20.jpg">
+    <img name="im" onclick="c(1)" src="kakigoori21.jpg">
+    <img name="im" onclick="c(2)" src="kakigoori22.jpg"><br>
+    <img name="im" onclick="c(3)" src="kakigoori23.jpg">
+    <img name="im" onclick="c(4)" src="kakigoori24.jpg">
+    <img name="im" onclick="c(5)" src="kakigoori25.jpg"><br>
+    <img name="im" onclick="c(6)" src="kakigoori26.jpg">
+    <img name="im" onclick="c(7)" src="kakigoori27.jpg">
+    <img name="im" onclick="c(8)" src="black.png"><br>
+  </div>
+
+  <div id="moves">移動回数: 0回</div>
+  <div id="time">経過時間: 0秒</div>
+  
+</body>
+</html>
